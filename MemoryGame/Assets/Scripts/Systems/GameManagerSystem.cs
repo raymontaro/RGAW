@@ -10,7 +10,7 @@ public class GameManagerSystem : SystemBase
 {
     public static GameManagerSystem Instance;
 
-    public enum Gamestate { loading,spawn,instructions,firstCard,secondCard,check,wrong,right,win,lose,showTips,end};
+    public enum Gamestate { loading,spawn,instructions,showCard,firstCard,secondCard,check,wrong,right,win,lose,showTips,end};
 
     public Gamestate myGameState;
 
@@ -165,8 +165,7 @@ public class GameManagerSystem : SystemBase
             var instructionTransform = GetComponent<RectTransform>(instructionEntity);
             instructionTransform.Hidden = true;
             SetComponent(instructionEntity, instructionTransform);
-            myGameState = Gamestate.firstCard;
-            isPlay = true;
+            myGameState = Gamestate.showCard;            
         }
 
         switch (myGameState)
@@ -174,6 +173,39 @@ public class GameManagerSystem : SystemBase
             case Gamestate.spawn:
                 SpawnCardSystem.Instance.Spawn();
                 myGameState = Gamestate.instructions;
+                break;
+            case Gamestate.showCard:
+                if (restartWaitTimer < 3f)
+                {
+                    restartWaitTimer += Time.DeltaTime;
+
+                    Entities.ForEach((ref CardEntityComponent cardEntityComponent) =>
+                    {
+                        EntityManager.SetComponentData(cardEntityComponent.entity, new Rotation { Value = quaternion.EulerXYZ(math.radians(0), math.radians(180), math.radians(0)) });
+                    }).WithoutBurst().Run();
+                    //var currentCardsBuffer = EntityManager.GetBuffer<Card>(SpawnCardSystem.Instance.currentCardsEntity);
+                    //for(int i = 0; i < currentCardsBuffer.Length; i++)
+                    //{
+                    //    EntityManager.SetComponentData(currentCardsBuffer[i].entity, new Rotation { Value = quaternion.EulerXYZ(math.radians(0), math.radians(180), math.radians(0)) });
+                    //}                    
+                }
+                else
+                {
+                    restartWaitTimer = 0f;
+
+                    Entities.ForEach((ref CardEntityComponent cardEntityComponent) =>
+                    {
+                        EntityManager.SetComponentData(cardEntityComponent.entity, new Rotation { Value = quaternion.identity });
+                    }).WithoutBurst().Run();
+                    //var currentCardsBuffer = EntityManager.GetBuffer<Card>(SpawnCardSystem.Instance.currentCardsEntity);
+                    //for (int i = 0; i < currentCardsBuffer.Length; i++)
+                    //{
+                    //    EntityManager.SetComponentData(currentCardsBuffer[i].entity, new Rotation { Value = quaternion.identity });
+                    //}
+
+                    myGameState = Gamestate.firstCard;
+                    isPlay = true;
+                }                
                 break;
             case Gamestate.firstCard:
                 if(firstCardSelected != Entity.Null)

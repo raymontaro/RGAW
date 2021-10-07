@@ -8,6 +8,9 @@ public class SpawnCardSystem : ComponentSystem
 {
     public static SpawnCardSystem Instance;
 
+    //public Entity currentCardsEntity;
+    //public DynamicBuffer<Card> currentCardsBuffer;
+
     //bool spawn = false;
     protected override void OnStartRunning()
     {
@@ -19,7 +22,8 @@ public class SpawnCardSystem : ComponentSystem
         RequireSingletonForUpdate<Card>();
         RequireSingletonForUpdate<CardPos>();
 
-        
+        //currentCardsEntity = EntityManager.CreateEntity();
+        //currentCardsBuffer = EntityManager.AddBuffer<Card>(currentCardsEntity);
     }
 
     protected override void OnUpdate()
@@ -35,8 +39,11 @@ public class SpawnCardSystem : ComponentSystem
 
     public void Spawn()
     {
-        
+
         //spawn = true;
+
+        //currentCardsBuffer = EntityManager.GetBuffer<Card>(currentCardsEntity);
+        //currentCardsBuffer.Clear();
 
         Entities.ForEach((ref CardEntityComponent cardEntity) =>
         {
@@ -73,6 +80,9 @@ public class SpawnCardSystem : ComponentSystem
             var spawnedEntity = EntityManager.Instantiate(cards[i].entity);
 
             EntityManager.SetComponentData(spawnedEntity, new Translation { Value = pos });
+
+            //currentCardsBuffer = EntityManager.GetBuffer<Card>(currentCardsEntity);
+            //currentCardsBuffer.Add(new Card {entity = spawnedEntity });
         }
 
         //GameManagerSystem.Instance.SetGameState(GameManagerSystem.Gamestate.firstCard);
