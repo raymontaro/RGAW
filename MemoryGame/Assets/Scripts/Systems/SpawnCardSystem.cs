@@ -50,6 +50,11 @@ public class SpawnCardSystem : ComponentSystem
             EntityManager.DestroyEntity(cardEntity.entity);
         });
 
+        Entities.ForEach((ref CardEntityComponent cardEntity, ref Disabled disabled) =>
+        {
+            EntityManager.DestroyEntity(cardEntity.entity);
+        });
+
         var cardsEntity = GetSingletonEntity<Card>();
         var cards = EntityManager.GetBuffer<Card>(cardsEntity);
 

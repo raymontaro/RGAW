@@ -10,7 +10,7 @@ public class GameManagerSystem : SystemBase
 {
     public static GameManagerSystem Instance;
 
-    public enum Gamestate { loading,spawn,instructions,showCard,firstCard,secondCard,check,wrong,right,win,lose,showTips,end};
+    public enum Gamestate { loading,spawn,instructions,showCard,firstCard,secondCard,check,wrong,right,showTips,win,lose,end};
 
     public Gamestate myGameState;
 
@@ -25,6 +25,7 @@ public class GameManagerSystem : SystemBase
     bool isPlay = false;
 
     bool isLoading = true;
+    bool isHidingCard = false;
 
     float gameDuration = 60f;
     float timer = 60f;
@@ -41,16 +42,12 @@ public class GameManagerSystem : SystemBase
     protected override void OnCreate()
     {        
         myGameState = Gamestate.spawn;
-        //Entity e = EntityManager.CreateEntity();
-        //EntityManager.AddComponentData(e, new GameState { Value = GameStates.None });
         tipsEntity = EntityManager.CreateEntity();            
     }
 
     protected override void OnUpdate()
     {
         var uiSys = World.GetExistingSystem<ProcessUIEvents>();
-        //var gameState = GetSingleton<GameState>();
-        //var winPanel = GetSingleton<WinPanel>();
 
         var input = World.GetExistingSystem<InputSystem>();
 
@@ -63,8 +60,22 @@ public class GameManagerSystem : SystemBase
         var instructionButtonState = GetComponent<UIState>(instructionButonEntity);
         var winEntity = uiSys.GetEntityByUIName("Win");
         var loseEntity = uiSys.GetEntityByUIName("Lose");
-        
-        
+
+        #region hideToggle
+        var HideCardToggleEntity = uiSys.GetEntityByUIName("HideCardToggle");
+        if (HideCardToggleEntity == Entity.Null)
+            return;
+        var HideCardToggleState = GetComponent<UIState>(HideCardToggleEntity);
+        var HideCardMaskEntity = uiSys.GetEntityByUIName("HideCardMask");
+
+        if (HideCardToggleState.IsClicked)
+            isHidingCard = !isHidingCard;
+
+        var hideTransform = GetComponent<RectTransform>(HideCardMaskEntity);
+        hideTransform.Hidden = !isHidingCard;
+        SetComponent(HideCardMaskEntity, hideTransform);
+        #endregion
+
         var restartEntity = uiSys.GetEntityByUIName("Restart");
 
         tipsBuffer = EntityManager.AddBuffer<Tips>(tipsEntity);
@@ -97,32 +108,10 @@ public class GameManagerSystem : SystemBase
             var restartTransform = GetComponent<RectTransform>(restartEntity);
             restartTransform.Hidden = true;
             SetComponent(restartEntity, restartTransform);
-
-            
         }
 
         var timerEntity = GetSingletonEntity<TimerText>();
-        var restartTextEntity = uiSys.GetEntityByUIName("RestartText");        
-
-        //if (input.GetKeyDown(KeyCode.Space))
-        //{
-        //    isWin = !isWin;
-        //    if (isWin)
-        //        gameState.Value = GameStates.Win;
-        //    else
-        //        gameState.Value = GameStates.None;
-
-        //    SetSingleton(gameState);
-        //}
-
-        //if (isWin)
-        //{
-        //    EntityManager.SetEnabled(winPanel.entity, true);
-        //}
-        //else
-        //{
-        //    EntityManager.SetEnabled(winPanel.entity, false);
-        //}
+        var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
 
         if (isPlay)
         {
@@ -137,6 +126,7 @@ public class GameManagerSystem : SystemBase
                 myGameState = Gamestate.lose;
             }
         }
+
 
         //if (isLoading)
         //{
@@ -161,12 +151,55 @@ public class GameManagerSystem : SystemBase
         //}
 
         if (instructionButtonState.IsClicked)
-        {            
-            var instructionTransform = GetComponent<RectTransform>(instructionEntity);
-            instructionTransform.Hidden = true;
-            SetComponent(instructionEntity, instructionTransform);
-            myGameState = Gamestate.showCard;            
+        {
+            if (myGameState == Gamestate.showTips)
+            {
+                firstCardSelected = Entity.Null;
+                secondCardSelected = Entity.Null;
+
+                var instructionTransform = GetComponent<RectTransform>(instructionEntity);
+                instructionTransform.Hidden = true;
+                SetComponent(instructionEntity, instructionTransform);
+
+                RectTransform tipsTransform2;
+
+                for (int i = 0; i < tipsBuffer.Length; i++)
+                {
+                    tipsTransform2 = GetComponent<RectTransform>(tipsBuffer[i].entity);
+                    tipsTransform2.Hidden = true;
+                    SetComponent(tipsBuffer[i].entity, tipsTransform2);
+                }
+
+                myGameState = Gamestate.firstCard;
+                isPlay = true;
+            }
+            else
+            {
+                var instructionTransform = GetComponent<RectTransform>(instructionEntity);
+                instructionTransform.Hidden = true;
+                SetComponent(instructionEntity, instructionTransform);
+                myGameState = Gamestate.showCard;
+            }
         }
+
+        Entities.ForEach((ref CardEntityComponent cardEntityComponent) =>
+        {
+            if (cardEntityComponent.isSelected)
+            {
+                if (cardEntityComponent.entity != firstCardSelected && cardEntityComponent.entity != secondCardSelected)
+                {
+                    EntityManager.SetEnabled(cardEntityComponent.entity, !isHidingCard);
+                }
+            }
+        }).WithoutBurst().Run();
+
+        Entities.ForEach((ref CardEntityComponent cardEntityComponent, ref Disabled disabled) =>
+        {
+            if (cardEntityComponent.isSelected && !isHidingCard)
+            {
+                EntityManager.SetEnabled(cardEntityComponent.entity, true);
+            }
+        }).WithoutBurst().Run();
 
         switch (myGameState)
         {
@@ -182,12 +215,7 @@ public class GameManagerSystem : SystemBase
                     Entities.ForEach((ref CardEntityComponent cardEntityComponent) =>
                     {
                         EntityManager.SetComponentData(cardEntityComponent.entity, new Rotation { Value = quaternion.EulerXYZ(math.radians(0), math.radians(180), math.radians(0)) });
-                    }).WithoutBurst().Run();
-                    //var currentCardsBuffer = EntityManager.GetBuffer<Card>(SpawnCardSystem.Instance.currentCardsEntity);
-                    //for(int i = 0; i < currentCardsBuffer.Length; i++)
-                    //{
-                    //    EntityManager.SetComponentData(currentCardsBuffer[i].entity, new Rotation { Value = quaternion.EulerXYZ(math.radians(0), math.radians(180), math.radians(0)) });
-                    //}                    
+                    }).WithoutBurst().Run();                 
                 }
                 else
                 {
@@ -197,19 +225,19 @@ public class GameManagerSystem : SystemBase
                     {
                         EntityManager.SetComponentData(cardEntityComponent.entity, new Rotation { Value = quaternion.identity });
                     }).WithoutBurst().Run();
-                    //var currentCardsBuffer = EntityManager.GetBuffer<Card>(SpawnCardSystem.Instance.currentCardsEntity);
-                    //for (int i = 0; i < currentCardsBuffer.Length; i++)
-                    //{
-                    //    EntityManager.SetComponentData(currentCardsBuffer[i].entity, new Rotation { Value = quaternion.identity });
-                    //}
 
                     myGameState = Gamestate.firstCard;
                     isPlay = true;
-                }                
+                }
                 break;
             case Gamestate.firstCard:
-                if(firstCardSelected != Entity.Null)
-                {                    
+                if (rightCount >= 9)
+                {
+                    myGameState = Gamestate.win;
+                }
+
+                if (firstCardSelected != Entity.Null)
+                {                                        
                     EntityManager.SetComponentData(firstCardSelected, new Rotation { Value = quaternion.EulerXYZ(math.radians(0),math.radians(180),math.radians(0)) });                    
                     myGameState = Gamestate.secondCard;
                 }
@@ -254,16 +282,28 @@ public class GameManagerSystem : SystemBase
                 break;
             case Gamestate.right:
                 rightCount++;
-                if (rightCount >= 9)
-                    myGameState = Gamestate.win;
-                else
-                {                    
+                //if (rightCount >= 9)
+                //    myGameState = Gamestate.win;
+                //else
+                //{
+                    int tipsIndex = EntityManager.GetComponentData<CardEntityComponent>(firstCardSelected).id-1;
+
+                    var tipsTransform = GetComponent<RectTransform>(tipsBuffer[tipsIndex].entity);
+                    tipsTransform.Hidden = false;
+                    SetComponent(tipsBuffer[tipsIndex].entity, tipsTransform);
+
                     firstCardSelected = Entity.Null;
                     secondCardSelected = Entity.Null;
 
-                    myGameState = Gamestate.firstCard;
-                }
+                    myGameState = Gamestate.showTips;
+                //}
 
+                break;
+            case Gamestate.showTips:
+                var instructionTransform2 = GetComponent<RectTransform>(instructionEntity);
+                instructionTransform2.Hidden = false;
+                SetComponent(instructionEntity, instructionTransform2);
+                isPlay = false;
                 break;
             case Gamestate.win:                
                 isWin = true;
@@ -276,73 +316,37 @@ public class GameManagerSystem : SystemBase
 
                 timer = 60f;
 
-                if (restartWaitTimer < 2f)
+                if (restartWaitTimer < 3f)
                 {
                     restartWaitTimer += Time.DeltaTime;
                 }
                 else
                 {
-                    restartWaitTimer = 0f;
+                    restartWaitTimer = 3f;
 
-                    //firstCardSelected = Entity.Null;
-                    //secondCardSelected = Entity.Null;
-                    //rightCount = 0;
-
-                    myGameState = Gamestate.showTips;
+                    myGameState = Gamestate.end;
                 }
                 break;
             case Gamestate.lose:
                 isWin = false;
                 isPlay = false;
-                //gameState.Value = GameStates.Win;
-                //SetSingleton(gameState);
                 var loseTransform = GetComponent<RectTransform>(loseEntity);
                 loseTransform.Hidden = false;
                 SetComponent(loseEntity, loseTransform);
 
                 timer = 60f;
 
-                if (restartWaitTimer < 2f)
+                if (restartWaitTimer < 3f)
                 {
                     restartWaitTimer += Time.DeltaTime;
                 }
                 else
                 {
-                    restartWaitTimer = 0f;
+                    restartWaitTimer = 3f;
 
-                    //firstCardSelected = Entity.Null;
-                    //secondCardSelected = Entity.Null;
-                    //rightCount = 0;
-
-                    myGameState = Gamestate.showTips;
+                    myGameState = Gamestate.end;
                 }
-                break;
-            case Gamestate.showTips:
-                var winTransform2 = GetComponent<RectTransform>(winEntity);
-                winTransform2.Hidden = false;
-                SetComponent(winEntity, winTransform2);
-
-                var loseTransform2 = GetComponent<RectTransform>(loseEntity);
-                loseTransform2.Hidden = false;
-                SetComponent(loseEntity, loseTransform2);                
-
-                Random rand = new Random((uint)math.round(System.DateTime.Now.Millisecond) + 1);
-                int tipsIndex = 0;
-                for(int i = 0; i < System.DateTime.Now.Millisecond; i++)
-                {
-                    tipsIndex = rand.NextInt(0, 9);
-                }
-                //Debug.Log(tipsIndex);
-
-                var tipsTransform = GetComponent<RectTransform>(tipsBuffer[tipsIndex].entity);
-                tipsTransform.Hidden = false;
-                SetComponent(tipsBuffer[tipsIndex].entity, tipsTransform);
-
-                restartWaitTimer = 6f;
-
-                myGameState = Gamestate.end;
-
-                break;
+                break;            
             case Gamestate.end:
                 if (restartWaitTimer > 0f)
                 {
