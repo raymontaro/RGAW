@@ -7,37 +7,57 @@ using Unity.Tiny.Input;
 [AlwaysUpdateSystem]
 public class LoadingSystem : SystemBase
 {
+    public static bool isLevelLoaded = false;
+
     bool isLoading = true;
+
     float timer = 0;
+
     protected override void OnUpdate()
     {
         var uiSys = World.GetExistingSystem<ProcessUIEvents>();
         var loadingEntity = uiSys.GetEntityByUIName("Loading");
-        var startEntity = uiSys.GetEntityByUIName("StartMenu");
-        var startButonEntity = uiSys.GetEntityByUIName("StartButton");
+        //var startEntity = uiSys.GetEntityByUIName("StartMenu");
+        //var startButonEntity = uiSys.GetEntityByUIName("StartButton");
 
 
-        if (startButonEntity == Entity.Null)
-            return;
-        var startButtonState = GetComponent<UIState>(startButonEntity);
+        //if (startButonEntity == Entity.Null)
+        //    return;
+        //var startButtonState = GetComponent<UIState>(startButonEntity);
 
-        
 
-        if (startButtonState.IsClicked)
+
+        //if (startButtonState.IsClicked)
+        //{
+        //    var loadingTransformFinish = GetComponent<RectTransform>(loadingEntity);
+        //    loadingTransformFinish.Hidden = true;
+        //    SetComponent(loadingEntity, loadingTransformFinish);
+
+        //    var startTransformFinish = GetComponent<RectTransform>(startEntity);
+        //    startTransformFinish.Hidden = true;
+        //    SetComponent(startEntity, startTransformFinish);
+
+        //    var sceneSystem = World.GetExistingSystem<SceneSystem>();
+        //    var playSceneEntity = GetSingletonEntity<Lv1>();
+        //    var playScene = EntityManager.GetComponentData<SceneReference>(playSceneEntity);
+
+        //    sceneSystem.LoadSceneAsync(playScene.SceneGUID, new SceneSystem.LoadParameters { AutoLoad = true, Flags = SceneLoadFlags.LoadAdditive });
+        //}
+
+        if (!isLoading && !isLevelLoaded)
         {
-            var loadingTransformFinish = GetComponent<RectTransform>(loadingEntity);
-            loadingTransformFinish.Hidden = true;
-            SetComponent(loadingEntity, loadingTransformFinish);
 
-            var startTransformFinish = GetComponent<RectTransform>(startEntity);
-            startTransformFinish.Hidden = true;
-            SetComponent(startEntity, startTransformFinish);
 
             var sceneSystem = World.GetExistingSystem<SceneSystem>();
             var playSceneEntity = GetSingletonEntity<Lv1>();
             var playScene = EntityManager.GetComponentData<SceneReference>(playSceneEntity);
 
             sceneSystem.LoadSceneAsync(playScene.SceneGUID, new SceneSystem.LoadParameters { AutoLoad = true, Flags = SceneLoadFlags.LoadAdditive });
+
+            if (sceneSystem.IsSceneLoaded(playSceneEntity))
+            {
+                isLevelLoaded = true;
+            }
         }
 
         if (!isLoading)
@@ -54,15 +74,15 @@ public class LoadingSystem : SystemBase
             isReady = true;
         }).WithStructuralChanges().Run();
 
-        if(timer>3f)
+        if (timer > 3f)
             isLoading = isReady;
-        
+
         var loadingTransform = GetComponent<RectTransform>(loadingEntity);
         loadingTransform.Hidden = !isLoading;
         SetComponent(loadingEntity, loadingTransform);
 
-        var startTransform = GetComponent<RectTransform>(startEntity);
-        startTransform.Hidden = isLoading;
-        SetComponent(startEntity, startTransform);
+        //var startTransform = GetComponent<RectTransform>(startEntity);
+        //startTransform.Hidden = isLoading;
+        //SetComponent(startEntity, startTransform);
     }
 }

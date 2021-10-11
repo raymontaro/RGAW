@@ -25,7 +25,7 @@ public class GameManagerSystem : SystemBase
     bool isPlay = false;
 
     bool isLoading = true;
-    bool isHidingCard = false;
+    bool isHidingCard = true;
 
     float gameDuration = 60f;
     float timer = 60f;
@@ -62,18 +62,18 @@ public class GameManagerSystem : SystemBase
         var loseEntity = uiSys.GetEntityByUIName("Lose");
 
         #region hideToggle
-        var HideCardToggleEntity = uiSys.GetEntityByUIName("HideCardToggle");
-        if (HideCardToggleEntity == Entity.Null)
-            return;
-        var HideCardToggleState = GetComponent<UIState>(HideCardToggleEntity);
-        var HideCardMaskEntity = uiSys.GetEntityByUIName("HideCardMask");
+        //var HideCardToggleEntity = uiSys.GetEntityByUIName("HideCardToggle");
+        //if (HideCardToggleEntity == Entity.Null)
+        //    return;
+        //var HideCardToggleState = GetComponent<UIState>(HideCardToggleEntity);
+        //var HideCardMaskEntity = uiSys.GetEntityByUIName("HideCardMask");
 
-        if (HideCardToggleState.IsClicked)
-            isHidingCard = !isHidingCard;
+        //if (HideCardToggleState.IsClicked)
+        //    isHidingCard = !isHidingCard;
 
-        var hideTransform = GetComponent<RectTransform>(HideCardMaskEntity);
-        hideTransform.Hidden = !isHidingCard;
-        SetComponent(HideCardMaskEntity, hideTransform);
+        //var hideTransform = GetComponent<RectTransform>(HideCardMaskEntity);
+        //hideTransform.Hidden = !isHidingCard;
+        //SetComponent(HideCardMaskEntity, hideTransform);
         #endregion
 
         var restartEntity = uiSys.GetEntityByUIName("Restart");

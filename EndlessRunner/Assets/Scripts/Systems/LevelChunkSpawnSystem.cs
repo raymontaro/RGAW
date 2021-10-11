@@ -7,6 +7,9 @@ public class LevelChunkSpawnSystem : SystemBase
 {
     public static LevelChunkSpawnSystem Instance;
 
+    public float initPos = -19f;
+    float levelLength = 9.5f;
+
     Random random;
     bool init = false;
 
@@ -30,25 +33,83 @@ public class LevelChunkSpawnSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        var spawnEntity = GetSingletonEntity<Spawn>();               
+        var spawnEntity = GetSingletonEntity<Spawn>();
 
-        int initPos = -10;
+        var currentInitPos = initPos;
 
         if (!init)
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
                 var spawnBuffer = EntityManager.GetBuffer<Spawn>(spawnEntity);
                 var spawnedEntity = EntityManager.Instantiate(spawnBuffer[0].entity);
-                EntityManager.SetComponentData(spawnedEntity, new Translation { Value = new float3(0, 0, initPos) });
-                initPos += 10;
+                EntityManager.SetComponentData(spawnedEntity, new Translation { Value = new float3(0, 0, currentInitPos) });
+                currentInitPos += (levelLength * 2);
 
                 AddLvBuffer(spawnedEntity);
             }
 
             init = true;
             return;
-        }        
+        }
+    }
+
+    //public void InitLevel()
+    //{
+    //    var spawnEntity = GetSingletonEntity<Spawn>();
+
+    //    for (int i = 0; i < 3; i++)
+    //    {
+    //        var spawnBuffer = EntityManager.GetBuffer<Spawn>(spawnEntity);
+    //        var spawnedEntity = EntityManager.Instantiate(spawnBuffer[0].entity);
+    //        EntityManager.SetComponentData(spawnedEntity, new Translation { Value = new float3(0, 0, initPos) });
+    //        initPos += (levelLength * 2);
+
+    //        AddLvBuffer(spawnedEntity);
+    //    }
+    //}
+
+    //public void ClearLevel()
+    //{
+    //    lvChunksBuffer = EntityManager.GetBuffer<LevelChunks>(lvChunksEntity);
+    //    if (lvChunksBuffer.Length <= 0)
+    //        return;
+
+    //    for(int i=0;i<lvChunksBuffer.Length;i++)
+    //    {
+    //        EntityManager.DestroyEntity(lvChunksBuffer[i].entity);
+    //    }
+
+    //    lvChunksBuffer.Clear();
+    //}
+
+    public void RestartSpawn()
+    {
+        lvChunksBuffer = EntityManager.GetBuffer<LevelChunks>(lvChunksEntity);
+        if (lvChunksBuffer.Length <= 0)
+            return;
+
+        for (int i = 0; i < lvChunksBuffer.Length; i++)
+        {
+            EntityManager.DestroyEntity(lvChunksBuffer[i].entity);
+        }
+
+        lvChunksBuffer.Clear();
+
+
+        var spawnEntity = GetSingletonEntity<Spawn>();
+
+        var currentInitPos = initPos;
+
+        for (int i = 0; i < 3; i++)
+        {
+            var spawnBuffer = EntityManager.GetBuffer<Spawn>(spawnEntity);
+            var spawnedEntity = EntityManager.Instantiate(spawnBuffer[0].entity);
+            EntityManager.SetComponentData(spawnedEntity, new Translation { Value = new float3(0, 0, currentInitPos) });
+            currentInitPos += (levelLength * 2);
+
+            AddLvBuffer(spawnedEntity);
+        }
     }
 
     public void SpawnLevelChunk()
@@ -58,7 +119,7 @@ public class LevelChunkSpawnSystem : SystemBase
         var spawnedEntity = EntityManager.Instantiate(spawnBuffer[random.NextInt(spawnBuffer.Length)].entity);
 
         float3 pos = EntityManager.GetComponentData<Translation>(lvChunksBuffer[lvChunksBuffer.Length - 1].entity).Value;
-        pos += new float3(0, 0, 5);
+        pos += new float3(0, 0, (levelLength*1.9f));
         EntityManager.SetComponentData(spawnedEntity, new Translation { Value = pos });
 
         AddLvBuffer(spawnedEntity);

@@ -15,3 +15,8 @@ public struct LevelChunks : IBufferElementData
 {
     public Entity entity;    
 }
+
+public struct Reminders : IBufferElementData
+{
+    public Entity entity;
+}
