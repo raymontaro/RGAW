@@ -17,9 +17,11 @@ public class GameManagerSystem : SystemBase
 
     float waitTimer = 0f;
     float timer = 60f;
-    int score = 0;
+    float score = 0f;
+    float showScore = 0f;
 
     bool once = false;
+    bool openTips = false;
 
     float initialSpeed = 5f;
     float maxSpeed = 15f;
@@ -59,7 +61,16 @@ public class GameManagerSystem : SystemBase
 
         var restartEntity = uiSys.GetEntityByUIName("Restart");
         var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
-        var timerEntity = uiSys.GetEntityByUIName("TimerText");        
+        var timerEntity = uiSys.GetEntityByUIName("TimerText");
+
+        if (showScore < score)
+        {
+            showScore += Time.DeltaTime*200;
+        }
+        else
+        {
+            showScore = score;
+        }
 
         switch (myGameState)
         {
@@ -94,7 +105,7 @@ public class GameManagerSystem : SystemBase
                 
                 LevelChunkMoveSystem.Instance.ChangeSpeed(currentSpeed);
                 break;
-            case Gamestate.win:
+            case Gamestate.win:                
                 if (waitTimer < 3f)
                 {
                     waitTimer += Time.DeltaTime;
@@ -103,28 +114,29 @@ public class GameManagerSystem : SystemBase
                 {
                     waitTimer = 3f;
 
-                    Random rand = new Random((uint)math.round(System.DateTime.Now.Millisecond) + 1);
-                    int tipsIndex = 0;
-                    for (int i = 0; i < System.DateTime.Now.Millisecond; i++)
+                    if (!openTips)
                     {
-                        tipsIndex = rand.NextInt(0, 8);
-                    }
+                        openTips = true;
 
-                    var tipsTransform = GetComponent<RectTransform>(remindersBuffer[tipsIndex].entity);
-                    tipsTransform.Hidden = false;
-                    SetComponent(remindersBuffer[tipsIndex].entity, tipsTransform);
+                        Random rand = new Random((uint)math.round(System.DateTime.Now.Millisecond) + 1);
+                        int tipsIndex = 0;
+                        for (int i = 0; i < System.DateTime.Now.Millisecond; i++)
+                        {
+                            tipsIndex = rand.NextInt(0, 8);
+                        }
+
+                        var tipsTransform = GetComponent<RectTransform>(remindersBuffer[tipsIndex].entity);
+                        tipsTransform.Hidden = false;
+                        SetComponent(remindersBuffer[tipsIndex].entity, tipsTransform);
+                    }
 
                     myGameState = Gamestate.restart;
                 }
                 break;
             case Gamestate.lose:
-                if (waitTimer < 3f)
+                if (!openTips)
                 {
-                    waitTimer += Time.DeltaTime;
-                }
-                else
-                {
-                    waitTimer = 3f;
+                    openTips = true;
 
                     Random rand = new Random((uint)math.round(System.DateTime.Now.Millisecond) + 1);
                     int tipsIndex = 0;
@@ -136,6 +148,16 @@ public class GameManagerSystem : SystemBase
                     var tipsTransform = GetComponent<RectTransform>(remindersBuffer[tipsIndex].entity);
                     tipsTransform.Hidden = false;
                     SetComponent(remindersBuffer[tipsIndex].entity, tipsTransform);
+                }
+
+                if (waitTimer < 3f)
+                {
+                    waitTimer += Time.DeltaTime;
+                }
+                else
+                {
+                    waitTimer = 3f;
+
 
                     myGameState = Gamestate.restart;
                 }
@@ -158,10 +180,13 @@ public class GameManagerSystem : SystemBase
                 {
                     waitTimer = 0f;
                     timer = 60f;
-                    score = 0;
+                    score = 0f;
+                    showScore = 0f;
                     currentSpeed = initialSpeed;
+                    PlayerAnimationSystem.RestartSpeed();
                     LevelChunkMoveSystem.Instance.ChangeSpeed(currentSpeed);
                     LevelChunkSpawnSystem.Instance.RestartSpawn();
+                    openTips = false;
                     myGameState = Gamestate.init;
                 }
                 break;
@@ -174,12 +199,12 @@ public class GameManagerSystem : SystemBase
 
         var gameCompletedEntity = uiSys.GetEntityByUIName("GameCompletedPanel");
         var gameCompletedTransform = GetComponent<RectTransform>(gameCompletedEntity);
-        gameCompletedTransform.Hidden = !(myGameState == Gamestate.lose || myGameState == Gamestate.restart);
+        gameCompletedTransform.Hidden = !/*(myGameState == Gamestate.lose || myGameState == Gamestate.restart)*/(myGameState == Gamestate.win);
         SetComponent(gameCompletedEntity, gameCompletedTransform);
 
         var timesUpEntity = uiSys.GetEntityByUIName("TimesUpPanel");
         var timesUpTransform = GetComponent<RectTransform>(timesUpEntity);
-        timesUpTransform.Hidden = !(myGameState == Gamestate.win);
+        timesUpTransform.Hidden = /*!(myGameState == Gamestate.win)*/true;
         SetComponent(timesUpEntity, timesUpTransform);
 
         var instructionEntity = uiSys.GetEntityByUIName("InstructionsPanel");        
@@ -193,7 +218,7 @@ public class GameManagerSystem : SystemBase
         SetComponent(restartEntity, restartTransform);
 
         var scoreEntity = uiSys.GetEntityByUIName("ScoreText");
-        TextLayout.SetEntityTextRendererString(EntityManager, scoreEntity, score.ToString());
+        TextLayout.SetEntityTextRendererString(EntityManager, scoreEntity, math.ceil(showScore).ToString());
     }
 
     private void DisableAllReminders()
@@ -215,7 +240,7 @@ public class GameManagerSystem : SystemBase
         myGameState = Gamestate.lose;
     }
 
-    public void AddScore(int value)
+    public void AddScore(float value)
     {
         score += value;
     }

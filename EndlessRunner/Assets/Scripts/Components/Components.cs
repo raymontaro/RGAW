@@ -20,3 +20,8 @@ public struct Reminders : IBufferElementData
 {
     public Entity entity;
 }
+
+public struct PlayerSprite : IBufferElementData
+{
+    public Entity entity;
+}

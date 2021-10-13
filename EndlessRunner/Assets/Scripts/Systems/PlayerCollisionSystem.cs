@@ -40,8 +40,11 @@ public class PlayerCollisionSystem : ComponentSystem
 
             if (coinTrigger)
             {
-                EntityManager.DestroyEntity(coinhit.Entity);
-                GameManagerSystem.Instance.AddScore(10);
+                //EntityManager.DestroyEntity(coinhit.Entity);
+                //GameManagerSystem.Instance.AddScore(10);
+
+                EntityManager.RemoveComponent<Follow>(coinhit.Entity);
+                EntityManager.AddComponentData<GetCollectible>(coinhit.Entity, new GetCollectible { entity = coinhit.Entity, t = 0f,score = 10 });
             }
 
             if (obstacleTrigger)
@@ -56,14 +59,20 @@ public class PlayerCollisionSystem : ComponentSystem
 
             if (cashTrigger)
             {
-                EntityManager.DestroyEntity(cashhit.Entity);
-                GameManagerSystem.Instance.AddScore(50);
+                //EntityManager.DestroyEntity(cashhit.Entity);
+                //GameManagerSystem.Instance.AddScore(50);
+
+                EntityManager.RemoveComponent<Follow>(cashhit.Entity);
+                EntityManager.AddComponentData<GetCollectible>(cashhit.Entity, new GetCollectible { entity = cashhit.Entity, t = 0f, score = 50 });
             }
 
             if (rTrigger)
             {
-                EntityManager.DestroyEntity(rhit.Entity);
-                GameManagerSystem.Instance.AddScore(100);
+                //EntityManager.DestroyEntity(rhit.Entity);
+                //GameManagerSystem.Instance.AddScore(100);
+
+                EntityManager.RemoveComponent<Follow>(rhit.Entity);
+                EntityManager.AddComponentData<GetCollectible>(rhit.Entity, new GetCollectible { entity = rhit.Entity, t = 0f, score = 100 });
             }
         });
     }
