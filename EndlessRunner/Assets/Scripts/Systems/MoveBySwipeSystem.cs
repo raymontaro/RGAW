@@ -7,6 +7,8 @@ using Unity.Mathematics;
 [UpdateAfter(typeof(PointerSwipeSystem))]
 public class MoveBySwipeSystem : SystemBase
 {
+    public static MoveBySwipeSystem Instance;
+
     //enum playerPos { center,right,left};
     enum playerPos { right, left };
 
@@ -15,6 +17,12 @@ public class MoveBySwipeSystem : SystemBase
     //float3 centerPos = new float3(0, 1, -2);
     float3 rightPos = new float3(1.5f, 1, -2);
     float3 leftPos = new float3(-1.5f, 1, -2);
+
+    protected override void OnStartRunning()
+    {
+        Instance = this;
+    }
+
 
     protected override void OnUpdate()
     {
@@ -57,5 +65,24 @@ public class MoveBySwipeSystem : SystemBase
             // Consume swipe
             swipeable.SwipeDirection = SwipeDirection.None;
         }).WithoutBurst().Run();
-    }    
+    } 
+    
+    public void Respawn()
+    {
+        Entities.ForEach((ref Swipeable swipeable, ref MoveBySwipe moveBySwipe) =>
+        {
+
+            switch (currentPos)
+            {
+                case playerPos.right:
+                    EntityManager.SetComponentData(moveBySwipe.entity, new Translation { Value = leftPos });
+                    currentPos = playerPos.left;                    
+                    break;
+                case playerPos.left:
+                    EntityManager.SetComponentData(moveBySwipe.entity, new Translation { Value = rightPos });
+                    currentPos = playerPos.right;                    
+                    break;
+            }                        
+        }).WithoutBurst().Run();
+    }
 }

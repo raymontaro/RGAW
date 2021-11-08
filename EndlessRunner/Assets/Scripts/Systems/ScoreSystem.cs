@@ -30,6 +30,12 @@ public class ScoreSystem : ComponentSystem
             else
             {                
                 GameManagerSystem.Instance.AddScore(getCollectible.score);
+
+                if(getCollectible.score == 100)
+                {
+                    GameManagerSystem.Instance.ShowTips();
+                }
+
                 EntityManager.DestroyEntity(getCollectible.entity);
             }
         });

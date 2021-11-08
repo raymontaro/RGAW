@@ -9,11 +9,11 @@ public class GameManagerSystem : SystemBase
 {
     public static GameManagerSystem Instance;
 
-    public enum Gamestate { init, instructions, play, win, lose, restart };
+    public enum Gamestate { init, instructions, play,tips, win, lose, restart,wait };
     public Gamestate myGameState;
 
     Entity remindersEntity;
-    DynamicBuffer<Reminders> remindersBuffer;
+    DynamicBuffer<Reminders> remindersBuffer;    
 
     float waitTimer = 0f;
     float timer = 60f;
@@ -22,6 +22,7 @@ public class GameManagerSystem : SystemBase
 
     bool once = false;
     bool openTips = false;
+    bool wallHit = false;
 
     float initialSpeed = 5f;
     float maxSpeed = 15f;
@@ -39,7 +40,7 @@ public class GameManagerSystem : SystemBase
     }
 
     protected override void OnUpdate()
-    {        
+    {
         if (!LoadingSystem.isLevelLoaded)
             return;
 
@@ -56,8 +57,8 @@ public class GameManagerSystem : SystemBase
                 remindersBuffer.Add(new Reminders { entity = uiSys.GetEntityByUIName("Reminder (" + i + ")") });
             }
         }
-        
-        SetUI();                
+
+        SetUI();
 
         var restartEntity = uiSys.GetEntityByUIName("Restart");
         var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
@@ -65,7 +66,7 @@ public class GameManagerSystem : SystemBase
 
         if (showScore < score)
         {
-            showScore += Time.DeltaTime*200;
+            showScore += Time.DeltaTime * 200;
         }
         else
         {
@@ -76,11 +77,12 @@ public class GameManagerSystem : SystemBase
         {
             case Gamestate.init:
                 DisableAllReminders();
+                TextLayout.SetEntityTextRendererString(EntityManager, timerEntity, math.ceil(timer).ToString());
                 //LevelChunkSpawnSystem.Instance.ClearLevel();
                 //LevelChunkSpawnSystem.Instance.InitLevel();
                 myGameState = Gamestate.instructions;
                 break;
-            case Gamestate.instructions:
+            case Gamestate.instructions:                
                 if (input.GetMouseButton(0))
                 {
                     myGameState = Gamestate.play;
@@ -100,40 +102,12 @@ public class GameManagerSystem : SystemBase
 
                 if (currentSpeed <= maxSpeed)
                 {
-                    currentSpeed += Time.DeltaTime*0.2f;
+                    currentSpeed += Time.DeltaTime * 0.2f;
                 }
-                
+
                 LevelChunkMoveSystem.Instance.ChangeSpeed(currentSpeed);
                 break;
-            case Gamestate.win:                
-                if (waitTimer < 3f)
-                {
-                    waitTimer += Time.DeltaTime;
-                }
-                else
-                {
-                    waitTimer = 3f;
-
-                    if (!openTips)
-                    {
-                        openTips = true;
-
-                        Random rand = new Random((uint)math.round(System.DateTime.Now.Millisecond) + 1);
-                        int tipsIndex = 0;
-                        for (int i = 0; i < System.DateTime.Now.Millisecond; i++)
-                        {
-                            tipsIndex = rand.NextInt(0, 8);
-                        }
-
-                        var tipsTransform = GetComponent<RectTransform>(remindersBuffer[tipsIndex].entity);
-                        tipsTransform.Hidden = false;
-                        SetComponent(remindersBuffer[tipsIndex].entity, tipsTransform);
-                    }
-
-                    myGameState = Gamestate.restart;
-                }
-                break;
-            case Gamestate.lose:
+            case Gamestate.tips:                
                 if (!openTips)
                 {
                     openTips = true;
@@ -150,6 +124,79 @@ public class GameManagerSystem : SystemBase
                     SetComponent(remindersBuffer[tipsIndex].entity, tipsTransform);
                 }
 
+                if (waitTimer < 2f)
+                {
+                    waitTimer += Time.DeltaTime;
+                }
+                else
+                {
+                    waitTimer = 0f;
+
+                    openTips = false;
+
+                    DisableAllReminders();
+
+                    if (wallHit)
+                    {
+                        wallHit = false;
+                        currentSpeed = initialSpeed;
+                        LevelChunkMoveSystem.Instance.ChangeSpeed(currentSpeed);
+                        MoveBySwipeSystem.Instance.Respawn();
+                        PlayerAnimationSystem.RestartSpeed();
+                        waitTimer = 0.5f;
+                        myGameState = Gamestate.wait;
+                    }
+                    else
+                    {
+                        myGameState = Gamestate.play;
+                    }
+                }
+                break;
+            case Gamestate.win:
+                if (waitTimer < 3f)
+                {
+                    waitTimer += Time.DeltaTime;
+                }
+                else
+                {
+                    waitTimer = 3f;
+
+                    //if (!openTips)
+                    //{
+                    //    openTips = true;
+
+                    //    Random rand = new Random((uint)math.round(System.DateTime.Now.Millisecond) + 1);
+                    //    int tipsIndex = 0;
+                    //    for (int i = 0; i < System.DateTime.Now.Millisecond; i++)
+                    //    {
+                    //        tipsIndex = rand.NextInt(0, 8);
+                    //    }
+
+                    //    var tipsTransform = GetComponent<RectTransform>(remindersBuffer[tipsIndex].entity);
+                    //    tipsTransform.Hidden = false;
+                    //    SetComponent(remindersBuffer[tipsIndex].entity, tipsTransform);
+                    //}
+
+                    myGameState = Gamestate.restart;
+                }
+                break;
+            case Gamestate.lose:
+                //if (!openTips)
+                //{
+                //    openTips = true;
+
+                //    Random rand = new Random((uint)math.round(System.DateTime.Now.Millisecond) + 1);
+                //    int tipsIndex = 0;
+                //    for (int i = 0; i < System.DateTime.Now.Millisecond; i++)
+                //    {
+                //        tipsIndex = rand.NextInt(0, 8);
+                //    }
+
+                //    var tipsTransform = GetComponent<RectTransform>(remindersBuffer[tipsIndex].entity);
+                //    tipsTransform.Hidden = false;
+                //    SetComponent(remindersBuffer[tipsIndex].entity, tipsTransform);
+                //}
+
                 if (waitTimer < 3f)
                 {
                     waitTimer += Time.DeltaTime;
@@ -163,7 +210,7 @@ public class GameManagerSystem : SystemBase
                 }
                 break;
             case Gamestate.restart:
-                if(waitTimer > 0f)
+                if (waitTimer > 0f)
                 {
                     waitTimer -= Time.DeltaTime;
                 }
@@ -190,8 +237,19 @@ public class GameManagerSystem : SystemBase
                     myGameState = Gamestate.init;
                 }
                 break;
+            case Gamestate.wait:
+                if (waitTimer > 0f)
+                {
+                    waitTimer -= Time.DeltaTime;
+                }
+                else
+                {
+                    waitTimer = 0f;
+                    myGameState = Gamestate.play;
+                }
+                    break;
         }
-    }    
+    }
 
     private void SetUI()
     {
@@ -199,7 +257,7 @@ public class GameManagerSystem : SystemBase
 
         var gameCompletedEntity = uiSys.GetEntityByUIName("GameCompletedPanel");
         var gameCompletedTransform = GetComponent<RectTransform>(gameCompletedEntity);
-        gameCompletedTransform.Hidden = !/*(myGameState == Gamestate.lose || myGameState == Gamestate.restart)*/(myGameState == Gamestate.win);
+        gameCompletedTransform.Hidden = !/*(myGameState == Gamestate.lose || myGameState == Gamestate.restart)*/(myGameState == Gamestate.win || myGameState == Gamestate.lose || myGameState == Gamestate.restart);
         SetComponent(gameCompletedEntity, gameCompletedTransform);
 
         var timesUpEntity = uiSys.GetEntityByUIName("TimesUpPanel");
@@ -237,11 +295,17 @@ public class GameManagerSystem : SystemBase
 
     public void HitObstacle()
     {
-        myGameState = Gamestate.lose;
+        wallHit = true;
+        myGameState = Gamestate.tips;        
     }
 
     public void AddScore(float value)
     {
         score += value;
+    }
+
+    public void ShowTips()
+    {
+        myGameState = Gamestate.tips;
     }
 }
