@@ -10,7 +10,7 @@ public class GameManagerSystem : SystemBase
 {
     public static GameManagerSystem Instance;
 
-    public enum Gamestate { loading,spawn,instructions,showCard,firstCard,secondCard,check,wrong,right,showTips,win,lose,end};
+    public enum Gamestate { start,loading,spawn,instructions,showCard,firstCard,secondCard,check,wrong,right,showTips,win,lose,end,thankyou};
 
     public Gamestate myGameState;
 
@@ -41,7 +41,7 @@ public class GameManagerSystem : SystemBase
 
     protected override void OnCreate()
     {        
-        myGameState = Gamestate.spawn;
+        myGameState = Gamestate.start;
         tipsEntity = EntityManager.CreateEntity();            
     }
 
@@ -77,6 +77,16 @@ public class GameManagerSystem : SystemBase
         #endregion
 
         var restartEntity = uiSys.GetEntityByUIName("Restart");
+        var startEntity = uiSys.GetEntityByUIName("Start");
+        var endEntity = uiSys.GetEntityByUIName("End");
+
+        var startTransform = GetComponent<RectTransform>(startEntity);
+        startTransform.Hidden = (myGameState != Gamestate.start);
+        SetComponent(startEntity, startTransform);
+
+        var endTransform = GetComponent<RectTransform>(endEntity);
+        endTransform.Hidden = (myGameState != Gamestate.thankyou);
+        SetComponent(endEntity, endTransform);
 
         tipsBuffer = EntityManager.AddBuffer<Tips>(tipsEntity);
         for (int i = 1; i <= 9; i++)
@@ -111,7 +121,7 @@ public class GameManagerSystem : SystemBase
         }
 
         var timerEntity = GetSingletonEntity<TimerText>();
-        var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
+        //var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
 
         if (isPlay)
         {
@@ -203,8 +213,23 @@ public class GameManagerSystem : SystemBase
 
         switch (myGameState)
         {
+            case Gamestate.start:
+                var playButtonEntity = uiSys.GetEntityByUIName("PlayButton");
+                var playButtonState = GetComponent<UIState>(playButtonEntity);
+                if (playButtonState.IsClicked)
+                {
+                    myGameState = Gamestate.spawn;                    
+                }
+
+                var instructionTransform = GetComponent<RectTransform>(instructionEntity);
+                instructionTransform.Hidden = true;
+                SetComponent(instructionEntity, instructionTransform);
+                break;
             case Gamestate.spawn:
                 SpawnCardSystem.Instance.Spawn();
+                var instructionTransform5 = GetComponent<RectTransform>(instructionEntity);
+                instructionTransform5.Hidden = false;
+                SetComponent(instructionEntity, instructionTransform5);
                 myGameState = Gamestate.instructions;
                 break;
             case Gamestate.showCard:
@@ -357,19 +382,15 @@ public class GameManagerSystem : SystemBase
                 {
                     if (restartWaitTimer > 0)
                     {
-                        var restartTransform2 = GetComponent<RectTransform>(restartEntity);
-                        restartTransform2.Hidden = false;
-                        SetComponent(restartEntity, restartTransform2);
+                        //var restartTransform2 = GetComponent<RectTransform>(restartEntity);
+                        //restartTransform2.Hidden = false;
+                        //SetComponent(restartEntity, restartTransform2);
                         
-                        TextLayout.SetEntityTextRendererString(EntityManager, restartTextEntity, "Game will restart in "+math.ceil(restartWaitTimer)+" seconds.");
+                        //TextLayout.SetEntityTextRendererString(EntityManager, restartTextEntity, "Game will restart in "+math.ceil(restartWaitTimer)+" seconds.");
                     }
                     else
                     {
                         restartWaitTimer = 0f;
-
-                        firstCardSelected = Entity.Null;
-                        secondCardSelected = Entity.Null;
-                        rightCount = 0;
 
                         var winTransform3 = GetComponent<RectTransform>(winEntity);
                         winTransform3.Hidden = true;
@@ -379,29 +400,43 @@ public class GameManagerSystem : SystemBase
                         loseTransform3.Hidden = true;
                         SetComponent(loseEntity, loseTransform3);
 
-                        RectTransform tipsTransform2;
-
-                        for (int i = 0; i < tipsBuffer.Length; i++)
-                        {
-                            tipsTransform2 = GetComponent<RectTransform>(tipsBuffer[i].entity);
-                            tipsTransform2.Hidden = true;
-                            SetComponent(tipsBuffer[i].entity, tipsTransform2);
-                        }
-
-                        var instructionTransform = GetComponent<RectTransform>(instructionEntity);
-                        instructionTransform.Hidden = false;
-                        SetComponent(instructionEntity, instructionTransform);
-
-                        var restartTransform2 = GetComponent<RectTransform>(restartEntity);
-                        restartTransform2.Hidden = true;
-                        SetComponent(restartEntity, restartTransform2);
-
-                        TextLayout.SetEntityTextRendererString(EntityManager, timerEntity, math.ceil(timer).ToString());
-
-                        myGameState = Gamestate.spawn;
+                        myGameState = Gamestate.thankyou;
                     }
                 }
                                 
+                break;
+            case Gamestate.thankyou:
+                var playAgainButtonEntity = uiSys.GetEntityByUIName("RestartButton");
+                var playAgainButtonState = GetComponent<UIState>(playAgainButtonEntity);
+                if (playAgainButtonState.IsClicked)
+                {
+                    firstCardSelected = Entity.Null;
+                    secondCardSelected = Entity.Null;
+                    rightCount = 0;
+
+                    
+
+                    RectTransform tipsTransform2;
+
+                    for (int i = 0; i < tipsBuffer.Length; i++)
+                    {
+                        tipsTransform2 = GetComponent<RectTransform>(tipsBuffer[i].entity);
+                        tipsTransform2.Hidden = true;
+                        SetComponent(tipsBuffer[i].entity, tipsTransform2);
+                    }
+
+                    var instructionTransform4 = GetComponent<RectTransform>(instructionEntity);
+                    instructionTransform4.Hidden = true;
+                    SetComponent(instructionEntity, instructionTransform4);
+
+                    var restartTransform2 = GetComponent<RectTransform>(restartEntity);
+                    restartTransform2.Hidden = true;
+                    SetComponent(restartEntity, restartTransform2);
+
+                    TextLayout.SetEntityTextRendererString(EntityManager, timerEntity, math.ceil(timer).ToString());
+
+                    myGameState = Gamestate.start;                    
+                }                
                 break;
         }        
     }

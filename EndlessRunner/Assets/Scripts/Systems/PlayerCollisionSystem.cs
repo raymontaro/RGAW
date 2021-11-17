@@ -45,11 +45,13 @@ public class PlayerCollisionSystem : ComponentSystem
 
                 EntityManager.RemoveComponent<Follow>(coinhit.Entity);
                 EntityManager.AddComponentData<GetCollectible>(coinhit.Entity, new GetCollectible { entity = coinhit.Entity, t = 0f,score = 10 });
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Coin);
             }
 
             if (obstacleTrigger)
             {                
                 GameManagerSystem.Instance.HitObstacle();
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Wall);
 
                 //var uiElementEntity = GetSingletonEntity<UIElement>();
                 //var uiElementBuffer = EntityManager.GetBuffer<UIElement>(uiElementEntity);
@@ -64,6 +66,7 @@ public class PlayerCollisionSystem : ComponentSystem
 
                 EntityManager.RemoveComponent<Follow>(cashhit.Entity);
                 EntityManager.AddComponentData<GetCollectible>(cashhit.Entity, new GetCollectible { entity = cashhit.Entity, t = 0f, score = 50 });
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Coin);
             }
 
             if (rTrigger)
@@ -73,6 +76,7 @@ public class PlayerCollisionSystem : ComponentSystem
 
                 EntityManager.RemoveComponent<Follow>(rhit.Entity);
                 EntityManager.AddComponentData<GetCollectible>(rhit.Entity, new GetCollectible { entity = rhit.Entity, t = 0f, score = 100 });
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Reminder);
             }
         });
     }

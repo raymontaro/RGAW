@@ -6,7 +6,7 @@ using Unity.Tiny.UI;
 
 public class MainSystem : SystemBase
 {
-    public enum Gamestate { question,answer,result};
+    public enum Gamestate {start, question,answer,result,thankyou};
     public Gamestate myGameState;
     bool isCorrect;
     int correctCount;
@@ -19,17 +19,28 @@ public class MainSystem : SystemBase
         var uiSys = World.GetExistingSystem<ProcessUIEvents>();
 
         var restartEntity = uiSys.GetEntityByUIName("Restart");
-        var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
+        //var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
 
         var trueButonEntity = uiSys.GetEntityByUIName("TrueButton");
         var trueButtonState = GetComponent<UIState>(trueButonEntity);
         var falseButonEntity = uiSys.GetEntityByUIName("FalseButton");
         var falseButtonState = GetComponent<UIState>(falseButonEntity);
         var nextButonEntity = uiSys.GetEntityByUIName("NextButton");
-        var nextButtonState = GetComponent<UIState>(nextButonEntity);        
+        var nextButtonState = GetComponent<UIState>(nextButonEntity);
+        var startButonEntity = uiSys.GetEntityByUIName("StartButton");
+        var startButtonState = GetComponent<UIState>(startButonEntity);
+        var restartButonEntity = uiSys.GetEntityByUIName("RestartButton");
+        var restartButtonState = GetComponent<UIState>(restartButonEntity);
 
         switch (myGameState)
         {
+            case Gamestate.start:
+                ShowStart();
+                if (startButtonState.IsClicked)
+                {                    
+                    myGameState = Gamestate.question;
+                }
+                break;
             case Gamestate.question:
                 ShowQuestion();
                 if (trueButtonState.IsClicked)
@@ -64,31 +75,51 @@ public class MainSystem : SystemBase
                 {
                     restartWaitTimer -= Time.DeltaTime;
                 }
-
-                if (restartWaitTimer <= 3)
+                else
                 {
-                    if (restartWaitTimer > 0)
-                    {
-                        var restartTransform = GetComponent<RectTransform>(restartEntity);
-                        restartTransform.Hidden = false;
-                        SetComponent(restartEntity, restartTransform);
+                    restartWaitTimer = 6f;
 
-                        TextLayout.SetEntityTextRendererString(EntityManager, restartTextEntity, "Game will restart in " + math.ceil(restartWaitTimer) + " seconds.");
-                    }
-                    else
-                    {
-                        restartWaitTimer = 6f;
-                        
-                        correctCount = 0;
-                        currentQuestion = 1;
-
-                        var restartTransform = GetComponent<RectTransform>(restartEntity);
-                        restartTransform.Hidden = true;
-                        SetComponent(restartEntity, restartTransform);
-
-                        myGameState = Gamestate.question;
-                    }
+                    myGameState = Gamestate.thankyou;
                 }
+
+                //if (restartWaitTimer <= 3)
+                //{
+                //    if (restartWaitTimer > 0)
+                //    {
+                //        var restartTransform = GetComponent<RectTransform>(restartEntity);
+                //        restartTransform.Hidden = false;
+                //        SetComponent(restartEntity, restartTransform);
+
+                //        TextLayout.SetEntityTextRendererString(EntityManager, restartTextEntity, "Game will restart in " + math.ceil(restartWaitTimer) + " seconds.");
+                //    }
+                //    else
+                //    {
+                //        restartWaitTimer = 6f;
+
+                //        correctCount = 0;
+                //        currentQuestion = 1;
+
+                //        var restartTransform = GetComponent<RectTransform>(restartEntity);
+                //        restartTransform.Hidden = true;
+                //        SetComponent(restartEntity, restartTransform);
+
+                //        myGameState = Gamestate.question;
+                //    }
+                //}
+                break;
+            case Gamestate.thankyou:
+                ShowThankyou();
+                if (restartButtonState.IsClicked)
+                {
+                    correctCount = 0;
+                    currentQuestion = 1;
+
+                    var restartTransform = GetComponent<RectTransform>(restartEntity);
+                    restartTransform.Hidden = true;
+                    SetComponent(restartEntity, restartTransform);
+
+                    myGameState = Gamestate.question;
+                }                                
                 break;
         }
     }
@@ -142,7 +173,9 @@ public class MainSystem : SystemBase
         var questionsEntity = uiSys.GetEntityByUIName("Questions");
         var answersEntity = uiSys.GetEntityByUIName("Answers");
         var resultsEntity = uiSys.GetEntityByUIName("Results");
-       
+        var startEntity = uiSys.GetEntityByUIName("Start");
+        var restartEntity = uiSys.GetEntityByUIName("Restart");
+
 
         var questionsTransform = GetComponent<RectTransform>(questionsEntity);
         questionsTransform.Hidden = false;
@@ -153,8 +186,14 @@ public class MainSystem : SystemBase
         var resultsTransform = GetComponent<RectTransform>(resultsEntity);
         resultsTransform.Hidden = true;
         SetComponent(resultsEntity, resultsTransform);
+        var startTransform = GetComponent<RectTransform>(startEntity);
+        startTransform.Hidden = true;
+        SetComponent(startEntity, startTransform);
+        var restartTransform = GetComponent<RectTransform>(restartEntity);
+        restartTransform.Hidden = true;
+        SetComponent(restartEntity, restartTransform);
 
-        for(int i = 1; i <= questionCount; i++)
+        for (int i = 1; i <= questionCount; i++)
         {
             var questionEntity = uiSys.GetEntityByUIName("Question (" + i + ")");
             var questionTransform = GetComponent<RectTransform>(questionEntity);
@@ -163,11 +202,11 @@ public class MainSystem : SystemBase
             SetComponent(questionEntity, questionTransform);
         }
 
-        var restartEntity = uiSys.GetEntityByUIName("Restart");
+        //var restartEntity = uiSys.GetEntityByUIName("Restart");
 
-        var restartTransform = GetComponent<RectTransform>(restartEntity);
-        restartTransform.Hidden = true;
-        SetComponent(restartEntity, restartTransform);
+        //var restartTransform = GetComponent<RectTransform>(restartEntity);
+        //restartTransform.Hidden = true;
+        //SetComponent(restartEntity, restartTransform);
     }
 
     private void ShowAnswer()
@@ -177,6 +216,8 @@ public class MainSystem : SystemBase
         var questionsEntity = uiSys.GetEntityByUIName("Questions");
         var answersEntity = uiSys.GetEntityByUIName("Answers");
         var resultsEntity = uiSys.GetEntityByUIName("Results");
+        var startEntity = uiSys.GetEntityByUIName("Start");
+        var restartEntity = uiSys.GetEntityByUIName("Restart");
 
         var questionsTransform = GetComponent<RectTransform>(questionsEntity);
         questionsTransform.Hidden = true;
@@ -187,6 +228,12 @@ public class MainSystem : SystemBase
         var resultsTransform = GetComponent<RectTransform>(resultsEntity);
         resultsTransform.Hidden = true;
         SetComponent(resultsEntity, resultsTransform);
+        var startTransform = GetComponent<RectTransform>(startEntity);
+        startTransform.Hidden = true;
+        SetComponent(startEntity, startTransform);
+        var restartTransform = GetComponent<RectTransform>(restartEntity);
+        restartTransform.Hidden = true;
+        SetComponent(restartEntity, restartTransform);
 
         if (isCorrect)
         {
@@ -225,11 +272,11 @@ public class MainSystem : SystemBase
             }
         }
 
-        var restartEntity = uiSys.GetEntityByUIName("Restart");
+        //var restartEntity = uiSys.GetEntityByUIName("Restart");
 
-        var restartTransform = GetComponent<RectTransform>(restartEntity);
-        restartTransform.Hidden = true;
-        SetComponent(restartEntity, restartTransform);
+        //var restartTransform = GetComponent<RectTransform>(restartEntity);
+        //restartTransform.Hidden = true;
+        //SetComponent(restartEntity, restartTransform);
     }
 
     private void ShowResult()
@@ -240,6 +287,8 @@ public class MainSystem : SystemBase
         var answersEntity = uiSys.GetEntityByUIName("Answers");
         var resultsEntity = uiSys.GetEntityByUIName("Results");
         var resultTextEntity = uiSys.GetEntityByUIName("resultText");
+        var startEntity = uiSys.GetEntityByUIName("Start");
+        var restartEntity = uiSys.GetEntityByUIName("Restart");
 
         var questionsTransform = GetComponent<RectTransform>(questionsEntity);
         questionsTransform.Hidden = true;
@@ -250,6 +299,12 @@ public class MainSystem : SystemBase
         var resultsTransform = GetComponent<RectTransform>(resultsEntity);
         resultsTransform.Hidden = false;
         SetComponent(resultsEntity, resultsTransform);
+        var startTransform = GetComponent<RectTransform>(startEntity);
+        startTransform.Hidden = true;
+        SetComponent(startEntity, startTransform);
+        var restartTransform = GetComponent<RectTransform>(restartEntity);
+        restartTransform.Hidden = true;
+        SetComponent(restartEntity, restartTransform);
 
         for (int i = 1; i <= 3; i++)
         {
@@ -272,10 +327,66 @@ public class MainSystem : SystemBase
 
         TextLayout.SetEntityTextRendererString(EntityManager, resultTextEntity, correctCount.ToString());
 
+        //var restartEntity = uiSys.GetEntityByUIName("Restart");
+
+        //var restartTransform = GetComponent<RectTransform>(restartEntity);
+        //restartTransform.Hidden = true;
+        //SetComponent(restartEntity, restartTransform);
+    }
+
+    private void ShowStart()
+    {
+        var uiSys = World.GetExistingSystem<ProcessUIEvents>();
+
+        var questionsEntity = uiSys.GetEntityByUIName("Questions");
+        var answersEntity = uiSys.GetEntityByUIName("Answers");
+        var resultsEntity = uiSys.GetEntityByUIName("Results");
+        var startEntity = uiSys.GetEntityByUIName("Start");
         var restartEntity = uiSys.GetEntityByUIName("Restart");
 
+        var questionsTransform = GetComponent<RectTransform>(questionsEntity);
+        questionsTransform.Hidden = true;
+        SetComponent(questionsEntity, questionsTransform);
+        var answersTransform = GetComponent<RectTransform>(answersEntity);
+        answersTransform.Hidden = true;
+        SetComponent(answersEntity, answersTransform);
+        var resultsTransform = GetComponent<RectTransform>(resultsEntity);
+        resultsTransform.Hidden = true;
+        SetComponent(resultsEntity, resultsTransform);
+        var startTransform = GetComponent<RectTransform>(startEntity);
+        startTransform.Hidden = false;
+        SetComponent(startEntity, startTransform);
         var restartTransform = GetComponent<RectTransform>(restartEntity);
         restartTransform.Hidden = true;
         SetComponent(restartEntity, restartTransform);
+
+    }
+
+    private void ShowThankyou()
+    {
+        var uiSys = World.GetExistingSystem<ProcessUIEvents>();
+
+        var questionsEntity = uiSys.GetEntityByUIName("Questions");
+        var answersEntity = uiSys.GetEntityByUIName("Answers");
+        var resultsEntity = uiSys.GetEntityByUIName("Results");
+        var startEntity = uiSys.GetEntityByUIName("Start");
+        var restartEntity = uiSys.GetEntityByUIName("Restart");
+
+        var questionsTransform = GetComponent<RectTransform>(questionsEntity);
+        questionsTransform.Hidden = true;
+        SetComponent(questionsEntity, questionsTransform);
+        var answersTransform = GetComponent<RectTransform>(answersEntity);
+        answersTransform.Hidden = true;
+        SetComponent(answersEntity, answersTransform);
+        var resultsTransform = GetComponent<RectTransform>(resultsEntity);
+        resultsTransform.Hidden = true;
+        SetComponent(resultsEntity, resultsTransform);
+        var startTransform = GetComponent<RectTransform>(startEntity);
+        startTransform.Hidden = true;
+        SetComponent(startEntity, startTransform);
+        var restartTransform = GetComponent<RectTransform>(restartEntity);
+        restartTransform.Hidden = false;
+        SetComponent(restartEntity, restartTransform);
+
     }
 }

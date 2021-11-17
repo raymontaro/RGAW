@@ -9,7 +9,7 @@ public class GameManagerSystem : SystemBase
 {
     public static GameManagerSystem Instance;
 
-    public enum Gamestate { init, instructions, play,tips, win, lose, restart,wait };
+    public enum Gamestate {start, init, instructions, play,tips, win, lose, restart,wait,thankyou };
     public Gamestate myGameState;
 
     Entity remindersEntity;
@@ -28,6 +28,8 @@ public class GameManagerSystem : SystemBase
     float maxSpeed = 15f;
     float currentSpeed = 5f;
 
+    bool initSound = false;
+
     protected override void OnStartRunning()
     {
         Instance = this;
@@ -35,7 +37,7 @@ public class GameManagerSystem : SystemBase
 
     protected override void OnCreate()
     {
-        myGameState = Gamestate.init;
+        myGameState = Gamestate.start;
         remindersEntity = EntityManager.CreateEntity();
     }
 
@@ -60,13 +62,21 @@ public class GameManagerSystem : SystemBase
 
         SetUI();
 
-        var restartEntity = uiSys.GetEntityByUIName("Restart");
-        var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
+        var startButonEntity = uiSys.GetEntityByUIName("StartButton");
+        var startButtonState = GetComponent<UIState>(startButonEntity);
+        var restartButonEntity = uiSys.GetEntityByUIName("RestartButton");
+        var restartButtonState = GetComponent<UIState>(restartButonEntity);
+        //var restartEntity = uiSys.GetEntityByUIName("Restart");
+        //var restartTextEntity = uiSys.GetEntityByUIName("RestartText");
         var timerEntity = uiSys.GetEntityByUIName("TimerText");
 
-        if (showScore < score)
+        if (showScore < score-5)
         {
             showScore += Time.DeltaTime * 200;
+        }
+        else if(showScore > score+5)
+        {
+            showScore -= Time.DeltaTime * 200;
         }
         else
         {
@@ -75,6 +85,20 @@ public class GameManagerSystem : SystemBase
 
         switch (myGameState)
         {
+            case Gamestate.start:
+                DisableAllReminders();
+                if (startButtonState.IsClicked)
+                {
+                    if (!initSound)
+                    {
+                        initSound = true;
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Coin);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Reminder);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Wall);
+                    }
+                    myGameState = Gamestate.init;
+                }
+                break;
             case Gamestate.init:
                 DisableAllReminders();
                 TextLayout.SetEntityTextRendererString(EntityManager, timerEntity, math.ceil(timer).ToString());
@@ -108,7 +132,7 @@ public class GameManagerSystem : SystemBase
                 LevelChunkMoveSystem.Instance.ChangeSpeed(currentSpeed);
                 break;
             case Gamestate.tips:                
-                if (!openTips)
+                if (!openTips && !wallHit)
                 {
                     openTips = true;
 
@@ -217,24 +241,16 @@ public class GameManagerSystem : SystemBase
 
                 if (waitTimer > 0)
                 {
-                    var restartTransform = GetComponent<RectTransform>(restartEntity);
-                    restartTransform.Hidden = false;
-                    SetComponent(restartEntity, restartTransform);
+                    //var restartTransform = GetComponent<RectTransform>(restartEntity);
+                    //restartTransform.Hidden = false;
+                    //SetComponent(restartEntity, restartTransform);
 
-                    TextLayout.SetEntityTextRendererString(EntityManager, restartTextEntity, "Game will restart in " + math.ceil(waitTimer) + " seconds.");
+                    //TextLayout.SetEntityTextRendererString(EntityManager, restartTextEntity, "Game will restart in " + math.ceil(waitTimer) + " seconds.");
                 }
                 else
                 {
-                    waitTimer = 0f;
-                    timer = 60f;
-                    score = 0f;
-                    showScore = 0f;
-                    currentSpeed = initialSpeed;
-                    PlayerAnimationSystem.RestartSpeed();
-                    LevelChunkMoveSystem.Instance.ChangeSpeed(currentSpeed);
-                    LevelChunkSpawnSystem.Instance.RestartSpawn();
-                    openTips = false;
-                    myGameState = Gamestate.init;
+                    waitTimer = 0f;                    
+                    myGameState = Gamestate.thankyou;
                 }
                 break;
             case Gamestate.wait:
@@ -247,7 +263,21 @@ public class GameManagerSystem : SystemBase
                     waitTimer = 0f;
                     myGameState = Gamestate.play;
                 }
-                    break;
+                break;
+            case Gamestate.thankyou:
+                if (restartButtonState.IsClicked)
+                {
+                    timer = 60f;
+                    score = 0f;
+                    showScore = 0f;
+                    currentSpeed = initialSpeed;
+                    PlayerAnimationSystem.RestartSpeed();
+                    LevelChunkMoveSystem.Instance.ChangeSpeed(currentSpeed);
+                    LevelChunkSpawnSystem.Instance.RestartSpawn();
+                    openTips = false;
+                    myGameState = Gamestate.start;
+                }                
+                break;
         }
     }
 
@@ -272,8 +302,23 @@ public class GameManagerSystem : SystemBase
 
         var restartEntity = uiSys.GetEntityByUIName("Restart");
         var restartTransform = GetComponent<RectTransform>(restartEntity);
-        restartTransform.Hidden = !(myGameState == Gamestate.restart);
+        restartTransform.Hidden = !(myGameState == Gamestate.thankyou);
         SetComponent(restartEntity, restartTransform);
+
+        var startEntity = uiSys.GetEntityByUIName("Start");
+        var startTransform = GetComponent<RectTransform>(startEntity);
+        startTransform.Hidden = !(myGameState == Gamestate.start);
+        SetComponent(startEntity, startTransform);
+
+        var TimerPanelEntity = uiSys.GetEntityByUIName("TimerPanel");
+        var TimerPanelTransform = GetComponent<RectTransform>(TimerPanelEntity);
+        TimerPanelTransform.Hidden = (myGameState == Gamestate.start || myGameState == Gamestate.thankyou);
+        SetComponent(TimerPanelEntity, TimerPanelTransform);
+
+        var ScorePanelEntity = uiSys.GetEntityByUIName("ScorePanel");
+        var ScorePanelTransform = GetComponent<RectTransform>(ScorePanelEntity);
+        ScorePanelTransform.Hidden = (myGameState == Gamestate.start || myGameState == Gamestate.thankyou);
+        SetComponent(ScorePanelEntity, ScorePanelTransform);
 
         var scoreEntity = uiSys.GetEntityByUIName("ScoreText");
         TextLayout.SetEntityTextRendererString(EntityManager, scoreEntity, math.ceil(showScore).ToString());
@@ -296,12 +341,25 @@ public class GameManagerSystem : SystemBase
     public void HitObstacle()
     {
         wallHit = true;
-        myGameState = Gamestate.tips;        
+        myGameState = Gamestate.tips;
+        ReduceScore(50);
     }
 
     public void AddScore(float value)
     {
         score += value;
+    }
+
+    public void ReduceScore(float value)
+    {
+        if ((score - value) < 0)
+        {
+            score = 0;
+        }
+        else
+        {
+            score -= value;
+        }
     }
 
     public void ShowTips()

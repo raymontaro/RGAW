@@ -25,3 +25,21 @@ public struct PlayerSprite : IBufferElementData
 {
     public Entity entity;
 }
+
+public struct AudioLibrary : IComponentData
+{
+}
+
+public enum AudioTypes
+{
+    None,
+    Reminder,
+    Coin,
+    Wall
+}
+
+public struct AudioObject : IBufferElementData
+{
+    public AudioTypes Type;
+    public Entity Clip;
+}

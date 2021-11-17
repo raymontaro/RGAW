@@ -42,7 +42,15 @@ public class LevelChunkSpawnSystem : SystemBase
             for (int i = 0; i < 3; i++)
             {
                 var spawnBuffer = EntityManager.GetBuffer<Spawn>(spawnEntity);
-                var spawnedEntity = EntityManager.Instantiate(spawnBuffer[0].entity);
+                Entity spawnedEntity;
+                if (i > 1)
+                {
+                    spawnedEntity = EntityManager.Instantiate(spawnBuffer[i].entity);
+                }
+                else
+                {
+                    spawnedEntity = EntityManager.Instantiate(spawnBuffer[0].entity);
+                }
                 EntityManager.SetComponentData(spawnedEntity, new Translation { Value = new float3(0, 0, currentInitPos) });
                 currentInitPos += (levelLength * 2);
 
@@ -104,7 +112,15 @@ public class LevelChunkSpawnSystem : SystemBase
         for (int i = 0; i < 3; i++)
         {
             var spawnBuffer = EntityManager.GetBuffer<Spawn>(spawnEntity);
-            var spawnedEntity = EntityManager.Instantiate(spawnBuffer[0].entity);
+            Entity spawnedEntity;
+            if (i > 1)
+            {
+                spawnedEntity = EntityManager.Instantiate(spawnBuffer[i].entity);
+            }
+            else
+            {
+                spawnedEntity = EntityManager.Instantiate(spawnBuffer[0].entity);
+            }
             EntityManager.SetComponentData(spawnedEntity, new Translation { Value = new float3(0, 0, currentInitPos) });
             currentInitPos += (levelLength * 2);
 
