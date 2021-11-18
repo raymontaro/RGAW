@@ -95,13 +95,18 @@ public class GameManagerSystem : SystemBase
                         AudioUtils.PlaySound(EntityManager, AudioTypes.Coin);
                         AudioUtils.PlaySound(EntityManager, AudioTypes.Reminder);
                         AudioUtils.PlaySound(EntityManager, AudioTypes.Wall);
-                    }
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);                        
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Swipe);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
+                    }                    
                     myGameState = Gamestate.init;
                 }
                 break;
             case Gamestate.init:
                 DisableAllReminders();
                 TextLayout.SetEntityTextRendererString(EntityManager, timerEntity, math.ceil(timer).ToString());
+                AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);
                 //LevelChunkSpawnSystem.Instance.ClearLevel();
                 //LevelChunkSpawnSystem.Instance.InitLevel();
                 myGameState = Gamestate.instructions;
@@ -109,6 +114,7 @@ public class GameManagerSystem : SystemBase
             case Gamestate.instructions:                
                 if (input.GetMouseButton(0))
                 {
+                    AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
                     myGameState = Gamestate.play;
                 }
                 break;
@@ -267,6 +273,7 @@ public class GameManagerSystem : SystemBase
             case Gamestate.thankyou:
                 if (restartButtonState.IsClicked)
                 {
+                    AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton);
                     timer = 60f;
                     score = 0f;
                     showScore = 0f;

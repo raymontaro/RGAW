@@ -51,6 +51,7 @@ public class MoveBySwipeSystem : SystemBase
                     {
                         EntityManager.SetComponentData(moveBySwipe.entity, new Translation { Value = leftPos });
                         currentPos = playerPos.left;
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Swipe);
                     }
                     break;
                 case playerPos.left:
@@ -58,12 +59,13 @@ public class MoveBySwipeSystem : SystemBase
                     {
                         EntityManager.SetComponentData(moveBySwipe.entity, new Translation { Value = rightPos });
                         currentPos = playerPos.right;
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Swipe);
                     }
-                    break;                
+                    break;                    
             }
 
             // Consume swipe
-            swipeable.SwipeDirection = SwipeDirection.None;
+            swipeable.SwipeDirection = SwipeDirection.None;            
         }).WithoutBurst().Run();
     } 
     

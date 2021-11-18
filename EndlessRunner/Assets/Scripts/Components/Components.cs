@@ -35,7 +35,11 @@ public enum AudioTypes
     None,
     Reminder,
     Coin,
-    Wall
+    Wall,
+    Tap,
+    Swipe,
+    StartButton,
+    RestartButton
 }
 
 public struct AudioObject : IBufferElementData

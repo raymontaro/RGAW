@@ -118,7 +118,7 @@ public class MainSystem : SystemBase
                     restartTransform.Hidden = true;
                     SetComponent(restartEntity, restartTransform);
 
-                    myGameState = Gamestate.question;
+                    myGameState = Gamestate.start;
                 }                                
                 break;
         }
@@ -141,7 +141,7 @@ public class MainSystem : SystemBase
                 isCorrect = (a == false);
                 break;
             case 5:
-                isCorrect = (a == false);
+                isCorrect = (a == true);
                 break;
             case 6:
                 isCorrect = (a == false);

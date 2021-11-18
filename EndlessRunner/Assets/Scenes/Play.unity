@@ -1869,6 +1869,14 @@ MonoBehaviour:
     Clip: {fileID: 8300000, guid: ae2bfaa3135b4444a8bfdabc2ac63f20, type: 3}
   - Type: 3
     Clip: {fileID: 8300000, guid: 655c06c445eb9684c8263f3cb8d038f5, type: 3}
+  - Type: 4
+    Clip: {fileID: 8300000, guid: 8d4887133eeff004aa144df5c2f0c57d, type: 3}
+  - Type: 5
+    Clip: {fileID: 8300000, guid: 78a19e5583e03484ebbac9daf1886949, type: 3}
+  - Type: 6
+    Clip: {fileID: 8300000, guid: 966787f07648b59448bda389887aed4b, type: 3}
+  - Type: 7
+    Clip: {fileID: 8300000, guid: 157d234c61ba11a43976d053266fd519, type: 3}
 --- !u!4 &751220828
 Transform:
   m_ObjectHideFlags: 0
