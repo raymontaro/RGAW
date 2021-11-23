@@ -36,3 +36,27 @@ public struct Tips : IBufferElementData
 {
     public Entity entity;
 }
+
+public struct AudioLibrary : IComponentData
+{
+}
+
+public enum AudioTypes
+{
+    None,
+    Reminder,
+    Coin,
+    Wall,
+    Tap,
+    Swipe,
+    StartButton,
+    RestartButton,
+    Correct,
+    Wrong
+}
+
+public struct AudioObject : IBufferElementData
+{
+    public AudioTypes Type;
+    public Entity Clip;
+}

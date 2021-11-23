@@ -7,7 +7,8 @@
         "Unity.Entities.Hybrid",
         "Unity.Mathematics",
         "Unity.Transforms",
-        "Tiny3D"
+        "Tiny3D",
+        "Unity.Tiny.Audio"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

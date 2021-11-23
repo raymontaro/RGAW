@@ -1,6 +1,7 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Tiny;
+using Unity.Tiny.Audio;
 using Unity.Tiny.Input;
 using Unity.Tiny.Text;
 using Unity.Tiny.UI;
@@ -28,7 +29,7 @@ public class GameManagerSystem : SystemBase
     float maxSpeed = 15f;
     float currentSpeed = 5f;
 
-    bool initSound = false;
+    bool initSound = false;    
 
     protected override void OnStartRunning()
     {
@@ -38,7 +39,7 @@ public class GameManagerSystem : SystemBase
     protected override void OnCreate()
     {
         myGameState = Gamestate.start;
-        remindersEntity = EntityManager.CreateEntity();
+        remindersEntity = EntityManager.CreateEntity();        
     }
 
     protected override void OnUpdate()
@@ -98,7 +99,7 @@ public class GameManagerSystem : SystemBase
                         AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton);
                         AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);                        
                         AudioUtils.PlaySound(EntityManager, AudioTypes.Swipe);
-                        AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);                        
                     }                    
                     myGameState = Gamestate.init;
                 }
@@ -106,7 +107,7 @@ public class GameManagerSystem : SystemBase
             case Gamestate.init:
                 DisableAllReminders();
                 TextLayout.SetEntityTextRendererString(EntityManager, timerEntity, math.ceil(timer).ToString());
-                AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);
+                AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);                
                 //LevelChunkSpawnSystem.Instance.ClearLevel();
                 //LevelChunkSpawnSystem.Instance.InitLevel();
                 myGameState = Gamestate.instructions;
@@ -120,6 +121,16 @@ public class GameManagerSystem : SystemBase
                 break;
             case Gamestate.play:
                 TextLayout.SetEntityTextRendererString(EntityManager, timerEntity, math.ceil(timer).ToString());
+
+                //if(EntityManager.GetComponentData<AudioSource>(bgm).volume < 1)
+                //{
+                //    float i = EntityManager.GetComponentData<AudioSource>(bgm).volume;
+                //    Entity clip = EntityManager.GetComponentData<AudioSource>(bgm).clip;
+                //    i += Time.DeltaTime;
+                //    if (i > 1)
+                //        i = 1;
+                //    EntityManager.SetComponentData<AudioSource>(bgm, new AudioSource { clip = clip, volume = i, loop = true });
+                //}
 
                 if (timer > 0)
                 {
@@ -271,6 +282,15 @@ public class GameManagerSystem : SystemBase
                 }
                 break;
             case Gamestate.thankyou:
+                //if (EntityManager.GetComponentData<AudioSource>(bgm).volume > 0)
+                //{
+                //    float i = EntityManager.GetComponentData<AudioSource>(bgm).volume;
+                //    Entity clip = EntityManager.GetComponentData<AudioSource>(bgm).clip;
+                //    i -= Time.DeltaTime;
+                //    if (i < 0)
+                //        i = 0;
+                //    EntityManager.SetComponentData<AudioSource>(bgm, new AudioSource { clip = clip, volume = i, loop = true });
+                //}
                 if (restartButtonState.IsClicked)
                 {
                     AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton);

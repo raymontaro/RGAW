@@ -31,6 +31,7 @@ public class GameManagerSystem : SystemBase
     float timer = 60f;
 
     bool uiIsSet = false;
+    bool initSound = false;    
     Entity tipsEntity;
     DynamicBuffer<Tips> tipsBuffer;    
 
@@ -97,7 +98,7 @@ public class GameManagerSystem : SystemBase
         if (!uiIsSet)
         {
             uiIsSet = true;
-
+        
             var winTransform = GetComponent<RectTransform>(winEntity);
             winTransform.Hidden = true;
             SetComponent(winEntity, winTransform);
@@ -164,6 +165,7 @@ public class GameManagerSystem : SystemBase
         {
             if (myGameState == Gamestate.showTips)
             {
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
                 firstCardSelected = Entity.Null;
                 secondCardSelected = Entity.Null;
 
@@ -185,6 +187,7 @@ public class GameManagerSystem : SystemBase
             }
             else
             {
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
                 var instructionTransform = GetComponent<RectTransform>(instructionEntity);
                 instructionTransform.Hidden = true;
                 SetComponent(instructionEntity, instructionTransform);
@@ -218,6 +221,15 @@ public class GameManagerSystem : SystemBase
                 var playButtonState = GetComponent<UIState>(playButtonEntity);
                 if (playButtonState.IsClicked)
                 {
+                    if (!initSound)
+                    {
+                        initSound = true;
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Reminder);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Wrong);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton);
+                    }
                     myGameState = Gamestate.spawn;                    
                 }
 
@@ -226,6 +238,7 @@ public class GameManagerSystem : SystemBase
                 SetComponent(instructionEntity, instructionTransform);
                 break;
             case Gamestate.spawn:
+                AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);
                 SpawnCardSystem.Instance.Spawn();
                 var instructionTransform5 = GetComponent<RectTransform>(instructionEntity);
                 instructionTransform5.Hidden = false;
@@ -263,7 +276,8 @@ public class GameManagerSystem : SystemBase
 
                 if (firstCardSelected != Entity.Null)
                 {                                        
-                    EntityManager.SetComponentData(firstCardSelected, new Rotation { Value = quaternion.EulerXYZ(math.radians(0),math.radians(180),math.radians(0)) });                    
+                    EntityManager.SetComponentData(firstCardSelected, new Rotation { Value = quaternion.EulerXYZ(math.radians(0),math.radians(180),math.radians(0)) });
+                    AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
                     myGameState = Gamestate.secondCard;
                 }
                 break;
@@ -271,6 +285,7 @@ public class GameManagerSystem : SystemBase
                 if (secondCardSelected != Entity.Null)
                 {
                     EntityManager.SetComponentData(secondCardSelected, new Rotation { Value = quaternion.EulerXYZ(math.radians(0), math.radians(180), math.radians(0)) });
+                    AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
                     myGameState = Gamestate.check;
                 }
                 break;
@@ -278,7 +293,7 @@ public class GameManagerSystem : SystemBase
                 
                 int firstId = EntityManager.GetComponentData<CardEntityComponent>(firstCardSelected).id;
                 int secondId = EntityManager.GetComponentData<CardEntityComponent>(secondCardSelected).id;
-                if (checkWaitTimer < 0.8f && firstId != secondId)
+                if (checkWaitTimer < 0.8f)
                 {
                     checkWaitTimer += Time.DeltaTime;
                 }
@@ -303,6 +318,8 @@ public class GameManagerSystem : SystemBase
                 firstCardSelected = Entity.Null;
                 secondCardSelected = Entity.Null;
 
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Wrong);
+
                 myGameState = Gamestate.firstCard;
                 break;
             case Gamestate.right:
@@ -320,7 +337,8 @@ public class GameManagerSystem : SystemBase
                     firstCardSelected = Entity.Null;
                     secondCardSelected = Entity.Null;
 
-                    myGameState = Gamestate.showTips;
+                AudioUtils.PlaySound(EntityManager, AudioTypes.Reminder);
+                myGameState = Gamestate.showTips;
                 //}
 
                 break;
@@ -410,6 +428,7 @@ public class GameManagerSystem : SystemBase
                 var playAgainButtonState = GetComponent<UIState>(playAgainButtonEntity);
                 if (playAgainButtonState.IsClicked)
                 {
+                    AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton);
                     firstCardSelected = Entity.Null;
                     secondCardSelected = Entity.Null;
                     rightCount = 0;

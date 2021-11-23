@@ -13,7 +13,7 @@ public class SelectCardSystem : ComponentSystem
                 if (cardEntityComponent.isSelected)
                     return;
 
-                if(GameManagerSystem.Instance.myGameState == GameManagerSystem.Gamestate.loading &&
+                if(GameManagerSystem.Instance.myGameState == GameManagerSystem.Gamestate.loading ||
                 GameManagerSystem.Instance.myGameState == GameManagerSystem.Gamestate.instructions)
                 {
                     return;

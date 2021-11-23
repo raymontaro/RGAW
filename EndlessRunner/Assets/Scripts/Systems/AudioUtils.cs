@@ -24,6 +24,25 @@ using Unity.Tiny.Audio;
             entityManager.AddComponent<AudioSourceStart>(sourceEntity);
         }
 
+        public static Entity PlayBGM(EntityManager entityManager, AudioTypes audioType, float vol = 1f, bool shouldLoop = false)
+        {
+            var clipEntity = FindAudioClip(entityManager, audioType);
+            if (clipEntity == Entity.Null)
+                return Entity.Null;
+
+            var sourceEntity = entityManager.CreateEntity();
+
+            entityManager.AddComponentData(sourceEntity, new AudioSource()
+            {
+                clip = clipEntity,
+                loop = shouldLoop,
+                volume = vol
+            });
+
+            entityManager.AddComponent<AudioSourceStart>(sourceEntity);
+            return sourceEntity;
+        }
+
         public static void StopSound(EntityManager entityManager, AudioTypes audioType)
         {
             var clipEntity = FindAudioClip(entityManager, audioType);

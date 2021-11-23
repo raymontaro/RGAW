@@ -3,6 +3,7 @@ using Unity.Mathematics;
 using Unity.Tiny;
 using Unity.Tiny.Text;
 using Unity.Tiny.UI;
+using Unity.Tiny.Input;
 
 public class MainSystem : SystemBase
 {
@@ -13,9 +14,12 @@ public class MainSystem : SystemBase
     int questionCount = 10;
     int currentQuestion = 1;
     float restartWaitTimer = 6f;
+    bool initSound = false;
+    bool start = false;
 
     protected override void OnUpdate()
     {
+        var input = World.GetExistingSystem<InputSystem>();
         var uiSys = World.GetExistingSystem<ProcessUIEvents>();
 
         var restartEntity = uiSys.GetEntityByUIName("Restart");
@@ -37,19 +41,37 @@ public class MainSystem : SystemBase
             case Gamestate.start:
                 ShowStart();
                 if (startButtonState.IsClicked)
-                {                    
+                {
+                    if (!initSound)
+                    {
+                        initSound = true;
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Correct);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.Wrong);
+                        AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton);
+                        //AudioUtils.PlaySound(EntityManager, AudioTypes.bgm, 0.1f, true);
+                    }
+                    start = false;
                     myGameState = Gamestate.question;
                 }
                 break;
             case Gamestate.question:
+                if (!start)
+                {
+                    start = true;
+                    PlayStartSound();
+                }
                 ShowQuestion();
                 if (trueButtonState.IsClicked)
                 {
+                    //AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
                     CheckAnswer(true);
                     myGameState = Gamestate.answer;
                 }
                 if (falseButtonState.IsClicked)
                 {
+                    //AudioUtils.PlaySound(EntityManager, AudioTypes.Tap);
                     CheckAnswer(false);
                     myGameState = Gamestate.answer;
                 }
@@ -57,7 +79,8 @@ public class MainSystem : SystemBase
             case Gamestate.answer:
                 ShowAnswer();
                 if (nextButtonState.IsClicked)
-                {                    
+                {
+                    AudioUtils.PlaySound(EntityManager, AudioTypes.Tap, 1f,false);
                     if (currentQuestion < questionCount)
                     {
                         myGameState = Gamestate.question;
@@ -71,14 +94,19 @@ public class MainSystem : SystemBase
                 break;
             case Gamestate.result:
                 ShowResult();
-                if (restartWaitTimer > 0f)
-                {
-                    restartWaitTimer -= Time.DeltaTime;
-                }
-                else
-                {
-                    restartWaitTimer = 6f;
+                //if (restartWaitTimer > 0f)
+                //{
+                //    restartWaitTimer -= Time.DeltaTime;
+                //}
+                //else
+                //{
+                //    restartWaitTimer = 6f;
 
+                //    myGameState = Gamestate.thankyou;
+                //}
+
+                if (input.GetMouseButton(0))
+                {
                     myGameState = Gamestate.thankyou;
                 }
 
@@ -111,6 +139,7 @@ public class MainSystem : SystemBase
                 ShowThankyou();
                 if (restartButtonState.IsClicked)
                 {
+                    AudioUtils.PlaySound(EntityManager, AudioTypes.RestartButton, 1f,false);
                     correctCount = 0;
                     currentQuestion = 1;
 
@@ -122,6 +151,11 @@ public class MainSystem : SystemBase
                 }                                
                 break;
         }
+    }
+
+    private void PlayStartSound()
+    {
+        AudioUtils.PlaySound(EntityManager, AudioTypes.StartButton,1f,false);
     }
 
     private void CheckAnswer(bool a)
@@ -162,7 +196,12 @@ public class MainSystem : SystemBase
 
         if (isCorrect)
         {
+            AudioUtils.PlaySound(EntityManager, AudioTypes.Correct,1f,false);            
             correctCount++;
+        }
+        else
+        {
+            AudioUtils.PlaySound(EntityManager, AudioTypes.Wrong,1f,false);
         }
     }
 
@@ -325,7 +364,7 @@ public class MainSystem : SystemBase
             SetComponent(resultEntity, resultTransform);
         }
 
-        TextLayout.SetEntityTextRendererString(EntityManager, resultTextEntity, correctCount.ToString());
+        TextLayout.SetEntityTextRendererString(EntityManager, resultTextEntity, correctCount.ToString()+"/10");
 
         //var restartEntity = uiSys.GetEntityByUIName("Restart");
 

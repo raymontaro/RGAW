@@ -39,7 +39,8 @@ public enum AudioTypes
     Tap,
     Swipe,
     StartButton,
-    RestartButton
+    RestartButton,
+    bgm
 }
 
 public struct AudioObject : IBufferElementData
